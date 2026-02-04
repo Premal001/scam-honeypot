@@ -1,2 +1,5 @@
-requests==2.32.5
+fastapi
+uvicorn
+requests
 groq
+pydantic
