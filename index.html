@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sarla Devi - Cyber HoneyPot</title>
+    <style>
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f0f0f; color: white; display: flex; height: 100vh; }
+        
+        /* Left Side: WhatsApp Style */
+        .phone-container { width: 400px; background: #e5ddd5; border-right: 2px solid #333; display: flex; flex-direction: column; }
+        .phone-header { background: #075e54; color: white; padding: 15px; display: flex; align-items: center; }
+        .profile-pic { width: 40px; height: 40px; border-radius: 50%; background: #ccc; margin-right: 10px; }
+        .chat-area { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); }
+        .message { padding: 10px; border-radius: 10px; max-width: 80%; font-size: 14px; position: relative; }
+        .received { background: white; color: black; align-self: flex-start; }
+        .sent { background: #dcf8c6; color: black; align-self: flex-end; }
+        .input-area { padding: 10px; background: #f0f0f0; display: flex; gap: 10px; }
+        input { flex: 1; padding: 10px; border: none; border-radius: 20px; }
+        button { padding: 10px 20px; background: #075e54; color: white; border: none; border-radius: 20px; cursor: pointer; }
+
+        /* Right Side: Hacker Terminal */
+        .terminal-container { flex: 1; padding: 20px; font-family: 'Courier New', Courier, monospace; overflow-y: auto; }
+        .terminal-header { font-size: 24px; color: #00ff00; margin-bottom: 20px; border-bottom: 1px solid #00ff00; padding-bottom: 10px; }
+        .log-entry { margin-bottom: 15px; border-left: 3px solid #333; padding-left: 10px; opacity: 0; animation: fadeIn 0.5s forwards; }
+        .log-title { font-weight: bold; color: #888; }
+        .scam-alert { color: #ff3333; font-weight: bold; font-size: 18px; }
+        .safe-alert { color: #00ff00; font-weight: bold; }
+        .intel-box { border: 1px solid #ff3333; padding: 10px; margin-top: 5px; background: #220000; color: #ffcccc; display: none; }
+        
+        @keyframes fadeIn { to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <div class="phone-container">
+        <div class="phone-header">
+            <div class="profile-pic"></div>
+            <div>
+                <div style="font-weight: bold;">Grandma Sarla</div>
+                <div style="font-size: 12px; opacity: 0.8;">Online</div>
+            </div>
+        </div>
+        <div class="chat-area" id="chatBox">
+            <div class="message sent">Hello beta, who is this?</div>
+        </div>
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="Type a scam message..." onkeypress="handleEnter(event)">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <div class="terminal-container">
+        <div class="terminal-header">>> INTELLIGENCE DASHBOARD_</div>
+        <div id="terminalLogs"></div>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const chatBox = document.getElementById('chatBox');
+            const terminal = document.getElementById('terminalLogs');
+            const message = input.value;
+            if (!message) return;
+
+            // 1. Add Scammer Message to Chat
+            chatBox.innerHTML += `<div class="message received">${message}</div>`;
+            input.value = '';
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // 2. Send to API
+            addLog("ANALYZING INCOMING PACKET...", "#ffff00");
+            
+            try {
+                const response = await fetch('http://127.0.0.1:8000/detect-and-respond', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message_text: message })
+                });
+                const data = await response.json();
+
+                // 3. Update Terminal
+                let statusColor = data.classification === "Scam" ? "#ff3333" : "#00ff00";
+                let intelHtml = "";
+                
+                if (data.extracted_intelligence.upi_ids.length > 0) {
+                    intelHtml = `<div class="intel-box" style="display:block;">⚠️ STOLEN UPI: ${data.extracted_intelligence.upi_ids.join(', ')}</div>`;
+                }
+
+                const logHtml = `
+                    <div class="log-entry" style="border-color: ${statusColor}">
+                        <div class="log-title">SCAN COMPLETE</div>
+                        <div>Status: <span style="color:${statusColor}">${data.classification.toUpperCase()}</span> (Confidence: ${data.confidence_score})</div>
+                        <div>Reason: ${data.explanation}</div>
+                        ${intelHtml}
+                    </div>
+                `;
+                terminal.innerHTML = logHtml + terminal.innerHTML;
+
+                // 4. Add Sarla's Reply to Chat
+                setTimeout(() => {
+                    chatBox.innerHTML += `<div class="message sent">${data.bot_response}</div>`;
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                }, 1000);
+
+            } catch (error) {
+                addLog("CONNECTION ERROR: Ensure backend is running", "red");
+            }
+        }
+
+        function addLog(text, color) {
+            const terminal = document.getElementById('terminalLogs');
+            terminal.innerHTML = `<div class="log-entry" style="color:${color}">${text}</div>` + terminal.innerHTML;
+        }
+
+        function handleEnter(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+    </script>
+</body>
+</html>
